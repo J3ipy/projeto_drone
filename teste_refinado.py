@@ -7,6 +7,8 @@ import numpy as np
 import cv2
 from enum import Enum, auto
 from djitellopy import Tello
+import signal
+import sys
 
 # --------- Estados da Máquina ---------
 class State(Enum):
@@ -64,6 +66,7 @@ class QRAutonomy:
     def __init__(self, sequence=['E','D','C','B','A'], max_height_cm=200):
         self.tello = Tello()
         self.tello.connect()
+
         # PID e Kalman para X e Y
         self.pid_x = PID(kp=0.4, ki=0.0, kd=0.2)
         self.pid_y = PID(kp=0.4, ki=0.0, kd=0.2)
@@ -142,25 +145,23 @@ class QRAutonomy:
                             self.state = State.MOVE_BACK
 
                 elif self.state == State.ALIGN:
-                    # Erros em pixels
                     err_x = (frame.shape[1] / 2) - self.detected_cx
                     err_y = (frame.shape[0] / 2) - self.detected_cy
-                    # Filtragem Kalman
                     fx = self.kalman_x.update(err_x)
                     fy = self.kalman_y.update(err_y)
-                    # Controle PID
                     ax = self.pid_x.update(fx, dt)
                     ay = self.pid_y.update(fy, dt)
-                    # Ajustes horizontais
+
                     if abs(fx) > 20:
                         step = min(abs(int(ax)), 20)
                         if ax > 0: self.tello.move_left(step)
-                        else:    self.tello.move_right(step)
-                    # Ajustes verticais
+                        else:      self.tello.move_right(step)
+
                     elif abs(fy) > 20:
                         step = min(abs(int(ay)), 20)
                         if ay > 0: self.tello.move_up(step)
-                        else:    self.tello.move_down(step)
+                        else:      self.tello.move_down(step)
+
                     else:
                         self.state = State.CAPTURE
 
@@ -191,16 +192,32 @@ class QRAutonomy:
                     break
 
         except KeyboardInterrupt:
-            print("[INFO] Interrompido pelo usuário.")
+            print("[INFO] Ctrl+C recebido dentro de run(), pousando...")
 
-        self.tello.land()
-        print(f"[INFO] Bateria final: {self.tello.get_battery()}%")
-        with open('log_qr.pkl', 'wb') as f:
-            pickle.dump(self.infos, f)
-        self.tello.streamoff()
-        cv2.destroyAllWindows()
-        self.tello.end()
+        finally:
+            # garante pouso e limpeza mesmo em erro ou Ctrl+C
+            self.tello.land()
+            print(f"[INFO] Bateria final: {self.tello.get_battery()}%")
+            with open('log_qr.pkl', 'wb') as f:
+                pickle.dump(self.infos, f)
+            self.tello.streamoff()
+            cv2.destroyAllWindows()
+            self.tello.end()
 
 if __name__ == '__main__':
+    # instância global para o handler de sinal
     qr_bot = QRAutonomy()
+
+    # handler para Ctrl+C no main thread
+    def handler(sig, frame):
+        print("\n[INFO] Ctrl+C detectado! Pousando imediatamente...")
+        qr_bot.tello.land()
+        qr_bot.tello.streamoff()
+        cv2.destroyAllWindows()
+        qr_bot.tello.end()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, handler)
+
+    # inicia a missão
     qr_bot.run()
