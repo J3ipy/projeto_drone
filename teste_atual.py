@@ -117,15 +117,6 @@ tello.land()
 bat_final = tello.get_battery()
 print(f"[INFO] Bateria final: {bat_final}% (inicial {tello.get_battery()}%)")
 
-# Pergunta para salvar dados
-if input('Salvar os dados desse teste? (s/n): ').lower() == 's':
-    now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    filename = f'dados_de_voo_{now}.pkl'
-    with open(filename, 'wb') as f:
-        pickle.dump(infos, f)
-    print(f"[INFO] Dados salvos em: {filename}")
-else:
-    print("[INFO] Teste descartado.")
 
 tello.streamoff()
 cv2.destroyAllWindows()
