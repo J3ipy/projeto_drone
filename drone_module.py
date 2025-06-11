@@ -12,13 +12,20 @@ def execute_command(drone, cmd, value_str):
         drone.land()
     elif cmd == 'go':
         try:
-            # Importa a velocidade do config
             from config import GO_XYZ_SPEED
-            x, y, z = map(int, value_str.split(':'))
-            drone.go_xyz_speed(x, y, z, GO_XYZ_SPEED)
+            params = list(map(int, value_str.split(':')))
+            drone.go_xyz_speed(params[0], params[1], params[2], GO_XYZ_SPEED)
         except ValueError:
-            print(f"ERRO: Valor inválido para o comando 'go': {value_str}")
+            print(f"Erro: valor inválido para o comando 'go': {value_str}")
+    
+    # <<< ADICIONE ESTE BLOCO >>>
+    elif cmd == 'move_up':
+        try:
+            drone.move_up(int(value_str))
+        except ValueError:
+            print(f"Erro: valor inválido para o comando 'move_up': {value_str}")
+
     else:
         print(f"AVISO: Comando '{cmd}' desconhecido.")
         
-    time.sleep(1) # Pausa para garantir que o comando anterior termine
+    time.sleep(0.5) # Pequena pausa após o comando

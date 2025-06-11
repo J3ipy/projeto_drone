@@ -11,6 +11,11 @@ STRAFE_SPEED_CENTERING = 15
 FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
 
+# Em config.py
+MINIMUM_BATTERY = 20 # Pousa se a bateria for menor ou igual a 20%
+
+NAV_GRACE_PERIOD = 1.5 
+
 
 # Velocidade do movimento lateral durante a busca (cm/s)
 SEARCH_SWEEP_SPEED = 7

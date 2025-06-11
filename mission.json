@@ -1,0 +1,10 @@
+{
+    "sequence": ["E", "D", "C", "B", "A"],
+    "plan": {
+        "E": {"action": "go", "value": "0:-50:65"},
+        "D": {"action": "go", "value": "0:-53:40"},
+        "C": {"action": "go", "value": "0:-55:-41"},
+        "B": {"action": "go", "value": "0:-80:-40"},
+        "A": {"action": "land", "value": "0"}
+    }
+}
